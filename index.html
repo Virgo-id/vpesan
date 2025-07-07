@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Virgo Chat</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: white;
+      overflow: hidden;
+    }
+
+    .header-bar {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 1rem;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 5;
+      background: transparent;
+    }
+
+    .header-bar button {
+      background-color: #00b894;
+      border: none;
+      color: white;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,184,148,0.5);
+    }
+
+    #chat-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      padding-top: 3.5rem;
+      overflow-y: auto;
+      gap: 0.6rem;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    #chat-box::-webkit-scrollbar {
+      display: none;
+    }
+
+    form {
+      display: flex;
+      padding: 0.5rem 1rem;
+      background: #1a1a1a;
+      border-top: 1px solid #222;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 0.9rem 1rem;
+      border: none;
+      border-radius: 30px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    button[type="submit"] {
+      margin-left: 0.5rem;
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 0.9rem 1.2rem;
+      border-radius: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .pesan-ku, .pesan-lawan {
+      max-width: 80%;
+      padding: 0.8rem 1rem;
+      border-radius: 18px;
+      word-wrap: break-word;
+    }
+
+    .pesan-ku {
+      align-self: flex-end;
+      background: #00b894;
+      color: #000;
+    }
+
+    .pesan-lawan {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <button onclick="location.href='admin.html'">Admin</button>
+  </div>
+
+  <main id="chat-box"></main>
+
+  <form id="chat-form" autocomplete="off">
+    <input type="text" id="message-input" placeholder="Ketik pesan..." required />
+    <button type="submit">Kirim</button>
+  </form>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXt7Jh0W-d5blhNoi3ocRdw4OyAY7fd3c",
+      authDomain: "pesan-30bab.firebaseapp.com",
+      projectId: "pesan-30bab",
+      storageBucket: "pesan-30bab.appspot.com",
+      messagingSenderId: "973488115942",
+      appId: "1:973488115942:web:0a8383a7a7b03aa9ba6b27"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const username = "Virgo";
+
+    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message-input");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (message) {
+        db.ref("pesan").push({
+          nama: username,
+          teks: message,
+          waktu: Date.now()
+        });
+        input.value = "";
+      }
+    });
+
+    function createMessageElement(data) {
+      const el = document.createElement("div");
+      el.className = data.nama === username ? "pesan-ku" : "pesan-lawan";
+      el.textContent = data.teks;
+      return el;
+    }
+
+    db.ref("pesan").limitToLast(100).on("child_added", (snapshot) => {
+      const data = snapshot.val();
+      const el = createMessageElement(data);
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  </script>
+</body>
+</html>
