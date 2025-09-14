@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Virgo Chat</title>
-  <link rel="icon" href="1.png" type="image/png">
+  <link rel="icon" type="image/png" href="1.png">
   <meta name="theme-color" content="#075E54" />
   <style>
     * { box-sizing: border-box; }
@@ -92,6 +92,7 @@
       background: #fff; color: #111;
       font-size: 1rem; outline: none;
       resize: none; max-height: 120px; line-height: 1.4;
+      overflow-y: auto;
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
     button[type="submit"] {
@@ -121,6 +122,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDXt7Jh0W-d5blhNoi3ocRdw4OyAY7fd3c",
       authDomain: "pesan-30bab.firebaseapp.com",
+      databaseURL: "https://pesan-30bab-default-rtdb.firebaseio.com", // ✅ penting
       projectId: "pesan-30bab",
       storageBucket: "pesan-30bab.appspot.com",
       messagingSenderId: "973488115942",
@@ -150,15 +152,23 @@
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const message = input.value.trim();
-      if (message) {
+      if (message.length > 0 && message.length <= 500) { // ✅ validasi
         db.ref("pesan").push({
-          nama: username, teks: message,
-          replyTo: replyTo, waktu: Date.now()
+          nama: username,
+          teks: message,
+          replyTo: replyTo,
+          waktu: Date.now()
         });
         input.value = ""; input.style.height = "auto";
         replyTo = null; replyPreview.style.display = "none";
       }
     });
+
+    function escapeHTML(str) { // ✅ anti XSS
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
 
     function createMessageElement(data, key) {
       const el = document.createElement("div");
@@ -175,6 +185,7 @@
       teksEl.textContent = data.teks;
       el.appendChild(teksEl);
 
+      // tombol hapus hanya untuk pesan sendiri
       if (data.nama === username) {
         const delBtn = document.createElement("button");
         delBtn.textContent = "✖"; delBtn.className = "hapus-btn";
@@ -182,29 +193,29 @@
           db.ref("pesan").child(key).remove();
         });
         el.appendChild(delBtn);
-
-        const replyBtn = document.createElement("button");
-        replyBtn.textContent = "↩"; replyBtn.className = "reply-btn";
-        replyBtn.addEventListener("click", () => {
-          replyTo = { nama: data.nama, teks: data.teks };
-          replyPreview.innerHTML = `<span>${data.nama}</span>: ${data.teks} <button onclick="cancelReply()">✖</button>`;
-          replyPreview.style.display = "block";
-        });
-        el.appendChild(replyBtn);
-
-        el.addEventListener("click", () => { el.classList.toggle("pesan-show-tools"); });
-      } else {
-        const replyBtn = document.createElement("button");
-        replyBtn.textContent = "↩"; replyBtn.className = "reply-btn";
-        replyBtn.addEventListener("click", () => {
-          replyTo = { nama: data.nama, teks: data.teks };
-          replyPreview.innerHTML = `<span>${data.nama}</span>: ${data.teks} <button onclick="cancelReply()">✖</button>`;
-          replyPreview.style.display = "block";
-        });
-        el.appendChild(replyBtn);
-
-        el.addEventListener("click", () => { el.classList.toggle("pesan-show-tools"); });
       }
+
+      // tombol reply
+      const replyBtn = document.createElement("button");
+      replyBtn.textContent = "↩"; replyBtn.className = "reply-btn";
+      replyBtn.addEventListener("click", () => {
+        replyTo = { nama: data.nama, teks: data.teks };
+        replyPreview.innerHTML = "";
+        const span = document.createElement("span");
+        span.textContent = data.nama;
+        replyPreview.appendChild(span);
+        replyPreview.appendChild(document.createTextNode(": " + data.teks));
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "✖";
+        cancelBtn.onclick = cancelReply;
+        replyPreview.appendChild(cancelBtn);
+        replyPreview.style.display = "block";
+      });
+      el.appendChild(replyBtn);
+
+      // toggle tools
+      el.addEventListener("click", () => { el.classList.toggle("pesan-show-tools"); });
+
       return el;
     }
 
@@ -212,15 +223,22 @@
       replyTo = null; replyPreview.style.display = "none";
     }
 
+    // stream pesan
     db.ref("pesan").limitToLast(50).on("child_added", (snap) => {
       const data = snap.val(); const key = snap.key;
       const el = createMessageElement(data, key);
-      chatBox.appendChild(el); chatBox.scrollTop = chatBox.scrollHeight;
+
+      const nearBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 50;
+      chatBox.appendChild(el);
+      if (nearBottom) chatBox.scrollTop = chatBox.scrollHeight;
+
+      // kalau > 50, hapus yg paling lama
       if (chatBox.children.length > 50) {
         const first = chatBox.firstChild;
         if (first && first.dataset.key) { db.ref("pesan").child(first.dataset.key).remove(); }
       }
     });
+
     db.ref("pesan").on("child_removed", (snap) => {
       const key = snap.key;
       const el = chatBox.querySelector(`[data-key="${key}"]`);
@@ -229,4 +247,3 @@
   </script>
 </body>
 </html>
-
