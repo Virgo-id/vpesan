@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Virgo Chat</title>
+  <link rel="icon" href="1.png" type="image/png">
   <meta name="theme-color" content="#075E54" />
   <style>
     * { box-sizing: border-box; }
@@ -211,11 +212,11 @@
       replyTo = null; replyPreview.style.display = "none";
     }
 
-    db.ref("pesan").limitToLast(200).on("child_added", (snap) => {
+    db.ref("pesan").limitToLast(50).on("child_added", (snap) => {
       const data = snap.val(); const key = snap.key;
       const el = createMessageElement(data, key);
       chatBox.appendChild(el); chatBox.scrollTop = chatBox.scrollHeight;
-      if (chatBox.children.length > 200) {
+      if (chatBox.children.length > 50) {
         const first = chatBox.firstChild;
         if (first && first.dataset.key) { db.ref("pesan").child(first.dataset.key).remove(); }
       }
@@ -228,3 +229,4 @@
   </script>
 </body>
 </html>
+
