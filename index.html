@@ -2,499 +2,583 @@
 <html lang="id">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Virgo Chat</title>
-  <link rel="icon" type="image/png" href="1.png">
-  <meta name="theme-color" content="#075E54" />
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Virgo Chat (Bubble Seragam)</title>
+    <link rel="icon" type="image/png" href="1.png">
+    <meta name="theme-color" content="#25D366" />
+    <style>
+        /* Skema Warna Gaya WhatsApp */
+        :root {
+            /* --- WARNA AKSEN UTAMA (Hijau WhatsApp) --- */
+            --main-accent-color: #25D366; 
+            
+            /* --- Latar Belakang (Disesuaikan dengan WA) --- */
+            --bg-primary: #FFFFFF; /* Putih untuk latar belakang utama/form */
+            --bg-secondary: #ECE5DD; /* Hijau muda/tekstur chat WA */
+            
+            /* Bubble Saya dan Lawan disamakan */
+            --bubble-self: #FFFFFF; /* Ganti menjadi putih */
+            --bubble-other: #FFFFFF; /* Tetap putih */
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      font-family: "Segoe UI", sans-serif;
-      background: #ece5dd;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+            --bg-header: var(--main-accent-color); 
+            
+            --accent-main: var(--main-accent-color); 
+            
+            --text-main: #1F2C34; /* Teks sangat gelap */
+            --text-subtle: #6D7B87; 
+            
+            --action-clear: #EF5350;
+            --input-field: #FFFFFF; 
+            
+            --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --shadow-input: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
 
-    header {
-      background: #075E54;
-      color: white;
-      padding: 0.8rem 1rem;
-      font-weight: bold;
-      font-size: 1.1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        * {
+            box-sizing: border-box;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-weight: 400;
+        }
 
-    #clear-all {
-      background: #d9534f;
-      border: none;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-    #chat-box {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      scroll-behavior: smooth;
-      background: url("https://i.ibb.co/4YZRcdt/wa-bg.png") repeat;
-      background-size: 300px;
-    }
+        /* Judul Bar Minimalis */
+        #title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            background: var(--bg-primary); 
+            border-bottom: 1px solid #EEEEEE;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--text-main);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
 
-    #chat-box::-webkit-scrollbar {
-      display: none;
-    }
-
-    .pesan-ku,
-    .pesan-lawan {
-      max-width: 70%;
-      padding: 0.6rem 0.9rem;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      line-height: 1.3;
-      position: relative;
-      transition: transform 0.2s ease;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .pesan-ku {
-      align-self: flex-end;
-      background: #dcf8c6;
-      color: #111;
-      border-top-right-radius: 0;
-    }
-
-    .pesan-lawan {
-      align-self: flex-start;
-      background: #fff;
-      color: #111;
-      border-top-left-radius: 0;
-    }
-
-    .hapus-btn,
-    .reply-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      border: none;
-      border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      font-size: 14px;
-      display: none;
-      cursor: pointer;
-      background: #075E54;
-      color: white;
-    }
-
-    .hapus-btn {
-      right: -65px;
-    }
-
-    .reply-btn {
-      right: -35px;
-    }
-
-    .pesan-lawan .reply-btn {
-      left: -30px;
-      right: auto;
-    }
-
-    .pesan-ku.pesan-show-tools {
-      transform: translateX(-70px);
-    }
-
-    .pesan-lawan.pesan-show-tools {
-      transform: translateX(40px);
-    }
-
-    .pesan-ku.pesan-show-tools .hapus-btn,
-    .pesan-ku.pesan-show-tools .reply-btn,
-    .pesan-lawan.pesan-show-tools .reply-btn {
-      display: block;
-    }
-
-    .reply-bubble {
-      font-size: 0.8rem;
-      color: #555;
-      border-left: 3px solid #34b7f1;
-      padding-left: 4px;
-      margin-bottom: 4px;
-    }
-
-    #reply-preview {
-      display: none;
-      background: #f0f0f0;
-      border-left: 4px solid #34b7f1;
-      padding: 0.5rem;
-      font-size: 0.9rem;
-      color: #333;
-      margin: 0 0.5rem;
-      border-radius: 4px;
-    }
-
-    #reply-preview span {
-      font-weight: bold;
-      color: #075E54;
-    }
-
-    #reply-preview button {
-      float: right;
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #888;
-    }
-
-    form {
-      display: flex;
-      align-items: flex-end;
-      padding: 0.5rem;
-      background: #f0f0f0;
-      border-top: 1px solid #ddd;
-      flex-direction: column;
-      gap: 0.3rem;
-    }
-
-    .input-row {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-
-    textarea {
-      flex: 1;
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: 25px;
-      background: #fff;
-      color: #111;
-      font-size: 1rem;
-      outline: none;
-      resize: none;
-      max-height: 120px;
-      line-height: 1.4;
-      overflow-y: auto;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    button[type="submit"] {
-      margin-left: 0.5rem;
-      background: #25d366;
-      color: white;
-      border: none;
-      padding: 0.6rem 0.9rem;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      transition: background 0.2s;
-    }
-
-    button[type="submit"]:hover {
-      background: #20b954;
-    }
-
-    /* Popup konfirmasi */
-   #confirm-popup {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
+        /* Tombol Hapus Semua (Ikon) */
+        #clear-all {
+            background: var(--bg-primary);
+            border: none;
+            color: var(--action-clear); 
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem; 
+            line-height: 1;
+            transition: background 0.2s, transform 0.1s;
+        }
+        #clear-all:hover { 
+            background: #ffebee; 
+            color: #d32f2f;
+        }
+        #clear-all:active { transform: scale(0.95); }
 
 
-    #confirm-popup div {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 300px;
-      text-align: center;
-      font-family: Segoe UI, sans-serif;
-    }
+        #chat-box {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            scroll-behavior: smooth;
+            background: var(--bg-secondary);
+        }
 
-    #confirm-popup button {
-      margin: 5px;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: white;
-    }
+        #chat-box::-webkit-scrollbar {
+            display: none;
+        }
 
-    #confirm-yes {
-      background: #d9534f;
-    }
+        .pesan-ku,
+        .pesan-lawan {
+            max-width: 80%;
+            padding: 0.8rem 1.2rem;
+            font-size: 1rem;
+            line-height: 1.4;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            
+            /* Properti yang disamakan */
+            background: var(--bubble-other); /* Keduanya putih */
+            color: var(--text-main); /* Keduanya teks gelap */
+            border: 1px solid #EDEDED; /* Keduanya memiliki border tipis */
+        }
 
-    #confirm-no {
-      background: #6c757d;
-    }
+        /* PERUBAHAN UTAMA: BUBBLE SAYA DISAMAKAN DENGAN BUBBLE LAWAN */
+        .pesan-ku {
+            align-self: flex-end;
+            /* Latar belakang, warna teks, dan border sudah disamakan di atas */
+            border-radius: 8px 4px 8px 8px; /* Sudut kanan atas tajam */
+        }
 
-    /* Toast */
-    #toast {
-      visibility: hidden;
-      min-width: 200px;
-      margin-left: -100px;
-      background: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 4px;
-      padding: 10px;
-      position: fixed;
-      left: 50%;
-      bottom: 30px;
-      z-index: 10000;
-      font-size: 14px;
-      opacity: 0;
-      transition: opacity 0.5s, bottom 0.5s;
-    }
-  </style>
+        .pesan-lawan {
+            align-self: flex-start;
+            /* Latar belakang, warna teks, dan border sudah disamakan di atas */
+            border-radius: 4px 8px 8px 8px; /* Sudut kiri atas tajam */
+        }
+        
+        .pesan-ku:hover, .pesan-lawan:hover,
+        .pesan-ku.pesan-show-tools, .pesan-lawan.pesan-show-tools {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Tombol Aksi (Hapus/Balas) - Tetap menggunakan aksen hijau */
+        .hapus-btn,
+        .reply-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 15px;
+            display: none;
+            cursor: pointer;
+            background: var(--accent-main);
+            color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .hapus-btn:hover, .reply-btn:hover { background: #1faa54; } 
+        .hapus-btn:active, .reply-btn:active { transform: translateY(-50%) scale(0.95); }
+
+
+        .hapus-btn { right: -70px; }
+        .reply-btn { right: -38px; }
+        .pesan-lawan .reply-btn { left: -38px; right: auto; }
+
+        .pesan-ku.pesan-show-tools { transform: translateX(-80px); }
+        .pesan-lawan.pesan-show-tools { transform: translateX(45px); }
+
+        .pesan-ku.pesan-show-tools .hapus-btn,
+        .pesan-ku.pesan-show-tools .reply-btn,
+        .pesan-lawan.pesan-show-tools .reply-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Reply Bubble Preview */
+        .reply-bubble {
+            font-size: 0.85rem;
+            color: var(--text-subtle);
+            border-left: 4px solid var(--accent-main); 
+            padding-left: 10px;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        #reply-preview {
+            display: none;
+            background: var(--bg-primary);
+            border-left: 5px solid var(--accent-main); 
+            padding: 0.8rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin: 0 0.8rem 0.5rem 0.8rem;
+            border-radius: 8px;
+            width: calc(100% - 1.6rem);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #reply-preview span {
+            font-weight: 500;
+            color: var(--accent-main);
+        }
+
+        #reply-preview button {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-subtle);
+            opacity: 0.8;
+            margin-top: -5px;
+        }
+        #reply-preview button:hover { color: var(--action-clear); }
+
+
+        form {
+            display: flex;
+            align-items: flex-end;
+            padding: 0.5rem 0.8rem;
+            background: var(--bg-primary); 
+            border-top: 1px solid #EEEEEE; 
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 0.7rem 1.5rem; 
+            border: none;
+            border-radius: 20px; 
+            background: var(--input-field);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            resize: none;
+            max-height: 140px;
+            line-height: 1.5;
+            overflow-y: auto;
+            box-shadow: var(--shadow-input);
+            width: 100%; 
+            transition: box-shadow 0.3s;
+        }
+        textarea:focus {
+            box-shadow: 0 0 0 2px var(--main-accent-color); 
+        }
+        textarea::placeholder {
+            color: var(--text-subtle);
+            font-weight: 300;
+        }
+
+        /* Popup konfirmasi */
+        #confirm-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        #confirm-popup div {
+            background: var(--bg-primary);
+            color: var(--text-main);
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 300px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: var(--shadow-soft);
+        }
+
+        #confirm-popup button {
+            margin: 8px;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            font-weight: 500;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #confirm-popup button:hover { 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        #confirm-popup button:active { 
+            transform: scale(0.98);
+        }
+
+        #confirm-yes { background: var(--action-clear); }
+        #confirm-no { background: var(--accent-main); } 
+
+        /* Toast */
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            margin-left: -100px;
+            background: var(--text-main);
+            color: var(--bg-primary);
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            z-index: 10000;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    Virgo Chat
-    <button id="clear-all">Hapus Semua</button>
-  </header>
-
-  <main id="chat-box"></main>
-
-  <form id="chat-form" autocomplete="off">
-    <div id="reply-preview"></div>
-    <div class="input-row">
-      <textarea id="message-input" placeholder="Ketik pesan..." rows="1" required></textarea>
-      <button type="submit">➤</button>
+    <div id="title-bar">
+        Virgo Chat
+        <button id="clear-all" title="Hapus Semua Pesan">&#x1F5D1;</button>
     </div>
-  </form>
 
-  <!-- Popup konfirmasi -->
-  <div id="confirm-popup">
-    <div>
-      <p>Yakin mau hapus semua pesan?</p>
-      <button id="confirm-yes">Ya</button>
-      <button id="confirm-no">Batal</button>
+    <main id="chat-box"></main>
+
+    <form id="chat-form" autocomplete="off">
+        <div id="reply-preview"></div>
+        <div class="input-row">
+            <textarea id="message-input" placeholder="Ketik pesan..." rows="1" required autofocus></textarea>
+            </div>
+    </form>
+
+    <div id="confirm-popup">
+        <div>
+            <p>Yakin mau hapus semua pesan?</p>
+            <button id="confirm-yes">Ya</button>
+            <button id="confirm-no">Batal</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Toast notifikasi -->
-  <div id="toast">Semua pesan berhasil dihapus</div>
+    <div id="toast">Semua pesan berhasil dihapus</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDXt7Jh0W-d5blhNoi3ocRdw4OyAY7fd3c",
-      authDomain: "pesan-30bab.firebaseapp.com",
-      databaseURL: "https://pesan-30bab-default-rtdb.firebaseio.com",
-      projectId: "pesan-30bab",
-      storageBucket: "pesan-30bab.appspot.com",
-      messagingSenderId: "973488115942",
-      appId: "1:973488115942:web:0a8383a7a7b03aa9ba6b27"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const username = "Virgo";
-    const chatBox = document.getElementById("chat-box");
-    const form = document.getElementById("chat-form");
-    const input = document.getElementById("message-input");
-    const replyPreview = document.getElementById("reply-preview");
-
-    let replyTo = null;
-
-    input.addEventListener("input", () => {
-      input.style.height = "auto";
-      input.style.height = (input.scrollHeight) + "px";
-    });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        form.requestSubmit();
-      }
-    });
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const message = input.value.trim();
-      if (message.length > 0 && message.length <= 500) {
-        db.ref("pesan").push({
-          nama: username,
-          teks: message,
-          replyTo: replyTo,
-          waktu: Date.now()
-        });
-        input.value = "";
-        input.style.height = "auto";
-        replyTo = null;
-        replyPreview.style.display = "none";
-      }
-    });
-
-    function createMessageElement(data, key) {
-      const el = document.createElement("div");
-      el.className = data.nama === username ? "pesan-ku" : "pesan-lawan";
-      el.dataset.key = key;
-
-      if (data.replyTo) {
-        const replyEl = document.createElement("div");
-        replyEl.className = "reply-bubble";
-        replyEl.textContent = data.replyTo.nama + ": " + data.replyTo.teks;
-        el.appendChild(replyEl);
-      }
-
-      const teksEl = document.createElement("div");
-      teksEl.textContent = data.teks;
-      el.appendChild(teksEl);
-
-      if (data.nama === username) {
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "✖";
-        delBtn.className = "hapus-btn";
-        delBtn.addEventListener("click", () => {
-          db.ref("pesan").child(key).remove();
-        });
-        el.appendChild(delBtn);
-      }
-
-      const replyBtn = document.createElement("button");
-      replyBtn.textContent = "↩";
-      replyBtn.className = "reply-btn";
-      replyBtn.addEventListener("click", () => {
-        replyTo = {
-          nama: data.nama,
-          teks: data.teks
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXt7Jh0W-d5blhNoi3ocRdw4OyAY7fd3c",
+            authDomain: "pesan-30bab.firebaseapp.com",
+            databaseURL: "https://pesan-30bab-default-rtdb.firebaseio.com",
+            projectId: "pesan-30bab",
+            storageBucket: "pesan-30bab.appspot.com",
+            messagingSenderId: "973488115942",
+            appId: "1:973488115942:web:0a8383a7a7b03aa9ba6b27"
         };
-        replyPreview.innerHTML = "";
-        const span = document.createElement("span");
-        span.textContent = data.nama;
-        replyPreview.appendChild(span);
-        replyPreview.appendChild(document.createTextNode(": " + data.teks));
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "✖";
-        cancelBtn.onclick = cancelReply;
-        replyPreview.appendChild(cancelBtn);
-        replyPreview.style.display = "block";
-      });
-      el.appendChild(replyBtn);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-      el.addEventListener("click", () => {
-        el.classList.toggle("pesan-show-tools");
-      });
+        const username = "Virgo";
+        const chatBox = document.getElementById("chat-box");
+        const form = document.getElementById("chat-form");
+        const input = document.getElementById("message-input");
+        const replyPreview = document.getElementById("reply-preview");
 
-      return el;
-    }
+        let replyTo = null;
 
-    function cancelReply() {
-      replyTo = null;
-      replyPreview.style.display = "none";
-    }
+        // Auto resize textarea
+        input.addEventListener("input", () => {
+            input.style.height = "auto";
+            input.style.height = (input.scrollHeight) + "px";
+        });
+        
+        // KIRIM PESAN DENGAN TOMBOL ENTER
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submitMessage();
+            }
+        });
 
-    // Auto scroll fix
-    let firstLoad = true;
-    const pesanRef = db.ref("pesan").limitToLast(50);
-
-    pesanRef.on("child_added", (snap) => {
-      const data = snap.val();
-      const key = snap.key;
-      const el = createMessageElement(data, key);
-
-      chatBox.appendChild(el);
-
-      if (!firstLoad) {
-        const nearBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 50;
-        if (nearBottom) chatBox.scrollTop = chatBox.scrollHeight;
-      }
-
-      if (chatBox.children.length > 50) {
-        const first = chatBox.firstChild;
-        if (first && first.dataset.key) {
-          db.ref("pesan").child(first.dataset.key).remove();
+        function submitMessage() {
+            const message = input.value.trim();
+            if (message.length > 0 && message.length <= 500) {
+                db.ref("pesan").push({
+                    nama: username,
+                    teks: message,
+                    replyTo: replyTo,
+                    waktu: Date.now()
+                });
+                
+                input.value = "";
+                input.style.height = "auto";
+                replyTo = null;
+                replyPreview.style.display = "none";
+                chatBox.scrollTop = chatBox.scrollHeight;
+                input.focus();
+            }
         }
-      }
-    });
 
-    pesanRef.once("value", () => {
-      chatBox.scrollTop = chatBox.scrollHeight;
-      firstLoad = false;
-    });
 
-    db.ref("pesan").on("child_removed", (snap) => {
-      const key = snap.key;
-      const el = chatBox.querySelector(`[data-key="${key}"]`);
-      if (el) el.remove();
-    });
+        function createMessageElement(data, key) {
+            const el = document.createElement("div");
+            el.className = data.nama === username ? "pesan-ku" : "pesan-lawan";
+            el.dataset.key = key;
 
-    // Toast
-    function showToast(msg) {
-      const toast = document.getElementById("toast");
-      toast.textContent = msg;
-      toast.style.visibility = "visible";
-      toast.style.opacity = "1";
-      toast.style.bottom = "50px";
+            if (data.replyTo) {
+                const replyEl = document.createElement("div");
+                replyEl.className = "reply-bubble";
+                const replyerName = data.replyTo.nama === username ? "Saya" : data.replyTo.nama;
+                replyEl.textContent = replyerName + ": " + data.replyTo.teks.substring(0, 30) + (data.replyTo.teks.length > 30 ? "..." : "");
+                el.appendChild(replyEl);
+            }
 
-      setTimeout(() => {
-        toast.style.opacity = "0";
-        toast.style.bottom = "30px";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 500);
-      }, 3000);
-    }
+            const teksEl = document.createElement("div");
+            teksEl.textContent = data.teks;
+            el.appendChild(teksEl);
 
-    // Popup hapus semua
-    const popup = document.getElementById("confirm-popup");
-    const yesBtn = document.getElementById("confirm-yes");
-    const noBtn = document.getElementById("confirm-no");
+            // Tombol Hapus (hanya untuk pesan saya)
+            if (data.nama === username) {
+                const delBtn = document.createElement("button");
+                delBtn.innerHTML = "&#x2716;"; // '✖'
+                delBtn.className = "hapus-btn";
+                delBtn.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    db.ref("pesan").child(key).remove();
+                });
+                el.appendChild(delBtn);
+            }
 
-    document.getElementById("clear-all").addEventListener("click", () => {
-      popup.style.display = "flex";
-      yesBtn.focus();
-    });
+            // Tombol Balas
+            const replyBtn = document.createElement("button");
+            replyBtn.innerHTML = "&#x21a9;"; // '↩'
+            replyBtn.className = "reply-btn";
+            replyBtn.addEventListener("click", (event) => {
+                event.stopPropagation();
+                replyTo = {
+                    nama: data.nama,
+                    teks: data.teks
+                };
+                replyPreview.innerHTML = "";
+                
+                const replyerName = data.nama === username ? "Saya" : data.nama;
 
-    yesBtn.addEventListener("click", () => {
-      db.ref("pesan").remove();
-      chatBox.innerHTML = "";
-      popup.style.display = "none";
-      showToast("✅ Semua pesan berhasil dihapus");
-    });
+                const span = document.createElement("span");
+                span.textContent = "Balas ke " + replyerName;
+                replyPreview.appendChild(span);
+                replyPreview.appendChild(document.createTextNode(": " + data.teks.substring(0, 50) + (data.teks.length > 50 ? "..." : "")));
+                
+                const cancelBtn = document.createElement("button");
+                cancelBtn.innerHTML = "&#x2716;";
+                cancelBtn.onclick = cancelReply;
+                replyPreview.appendChild(cancelBtn);
+                replyPreview.style.display = "block";
+                input.focus();
+                
+                document.querySelectorAll('.pesan-show-tools').forEach(p => p.classList.remove('pesan-show-tools'));
+            });
+            el.appendChild(replyBtn);
 
-    noBtn.addEventListener("click", () => {
-      popup.style.display = "none";
-    });
+            // Toggle show tools on click
+            el.addEventListener("click", (e) => {
+                if (e.target.tagName === 'BUTTON') return; 
 
-    // Keyboard di popup
-    document.addEventListener("keydown", (e) => {
-      if (popup.style.display === "flex") {
-        if (e.key === "Enter") yesBtn.click();
-        if (e.key === "Escape") noBtn.click();
-      }
-    });
-  </script>
+                document.querySelectorAll('.pesan-show-tools').forEach(p => {
+                    if (p !== el) {
+                        p.classList.remove('pesan-show-tools');
+                    }
+                });
+                el.classList.toggle("pesan-show-tools");
+            });
+
+            return el;
+        }
+
+        function cancelReply() {
+            replyTo = null;
+            replyPreview.style.display = "none";
+            input.focus();
+        }
+
+        // Logika Firebase
+        let firstLoad = true;
+        const pesanRef = db.ref("pesan").limitToLast(50);
+
+        pesanRef.on("child_added", (snap) => {
+            const data = snap.val();
+            const key = snap.key;
+            const el = chatBox.querySelector(`[data-key="${key}"]`);
+            
+            if (!el) {
+                const newEl = createMessageElement(data, key);
+                chatBox.appendChild(newEl);
+            }
+
+            if (!firstLoad) {
+                const isUserAtBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 100;
+                if (isUserAtBottom || data.nama === username) {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            }
+
+            while (chatBox.children.length > 50) {
+                const first = chatBox.firstChild;
+                if (first && first.dataset.key) {
+                    first.remove();
+                }
+            }
+        });
+
+        pesanRef.once("value", () => {
+            chatBox.scrollTop = chatBox.scrollHeight;
+            firstLoad = false;
+            input.focus();
+        });
+
+        db.ref("pesan").on("child_removed", (snap) => {
+            const key = snap.key;
+            const el = chatBox.querySelector(`[data-key="${key}"]`);
+            if (el) el.remove();
+        });
+
+        // Toast & Popup
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.textContent = msg;
+            toast.style.visibility = "visible";
+            toast.style.opacity = "1";
+            toast.style.bottom = "50px";
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.bottom = "30px";
+                setTimeout(() => {
+                    toast.style.visibility = "hidden";
+                }, 500);
+            }, 3000);
+        }
+
+        const popup = document.getElementById("confirm-popup");
+        const yesBtn = document.getElementById("confirm-yes");
+        const noBtn = document.getElementById("confirm-no");
+
+        document.getElementById("clear-all").addEventListener("click", () => {
+            popup.style.display = "flex";
+            yesBtn.focus();
+        });
+
+        yesBtn.addEventListener("click", () => {
+            db.ref("pesan").remove()
+                .then(() => {
+                    chatBox.innerHTML = "";
+                    popup.style.display = "none";
+                    showToast("✅ Semua pesan berhasil dihapus");
+                });
+        });
+
+        noBtn.addEventListener("click", () => {
+            popup.style.display = "none";
+            input.focus();
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (popup.style.display === "flex") {
+                if (e.key === "Enter") yesBtn.click();
+                if (e.key === "Escape") noBtn.click();
+            }
+        });
+    </script>
 </body>
 
 </html>
